@@ -271,7 +271,7 @@
       this._onClickProxy = $.proxy(this, '_onClick');
       this._onMouseOverProxy = $.proxy(this, '_onMouseOver'),
       this._onMouseOutProxy = $.proxy(this, '_onMouseOut');
-        // Draw the small map on HTML page
+        // ADD the events for each state to write the ID on the alert area
       for(var state in this.stateHitAreas) {
         this.stateHitAreas[state].toFront();
         $(this.stateHitAreas[state].node).bind('mouseout', this._onMouseOutProxy);
@@ -301,8 +301,8 @@
      */
     _initCreateLabels: function() {
       var R = this.paper; // shorter name for usage here
-      var neStates = ['VT', 'NH', 'MA', 'RI', 'CT', 'NJ', 'DE', 'MD', 'DC'];
-      
+     // var neStates = ['VT', 'NH', 'MA', 'RI', 'CT', 'NJ', 'DE', 'MD', 'DC'];
+      var neStates = ['PA', 'LE', 'QA', 'KU', 'DJ'];
       // calculate the values for placing items
       var neBoxX = 860;
       var neBoxY = 220;
