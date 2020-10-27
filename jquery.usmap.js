@@ -51,7 +51,7 @@
   // define some constant, The daimintions of the Map 
   // define the Default style
   // Some constants
-  var WIDTH = 1930,
+  var WIDTH = 1830,
       HEIGHT = 630,
       LABELS_WIDTH = 70;
   
@@ -115,7 +115,7 @@
       "stroke-linejoin": "round",
       scale: [1, 1]
     },
-    
+   
     // The styles for the hover
     'labelBackingHoverStyles': {
       fill: "#33c",
@@ -304,7 +304,7 @@
      // var neStates = ['VT', 'NH', 'MA', 'RI', 'CT', 'NJ', 'DE', 'MD', 'DC'];
       var neStates = ['PA', 'LE', 'QA', 'KU', 'DJ'];
       // calculate the values for placing items
-      var neBoxX = 860;
+      var neBoxX = 1700;
       var neBoxY = 220;
       var oWidth = this.options.labelWidth;
       var oHeight = this.options.labelHeight;
@@ -323,7 +323,8 @@
       var backingAttr = this.options.labelBackingStyles;
       var textAttr = this.options.labelTextStyles;
       var stateAttr = {};
-      
+
+
       // NE States
       for(var i=0, x, y, state; i<neStates.length; ++i) {
         state = neStates[i];
