@@ -1,86 +1,260 @@
-<!DOCTYPE html>
 <html>
+
 <head>
 	<title>AW Map Demo</title>
-	
+
 	<style>
-	  #alert {
-	    font-family: Arial, Helvetica, sans-serif;
-	    font-size: 16px;
-	    background-color: #ddd;
-	    color: #333;
-	    padding: 5px;
-	    font-weight: bold;
-	  }
+		@keyframes opacityAnimation {
+			from {
+				opacity: 0;
+			}
+
+			to {
+				opacity: 1;
+			}
+		}
+
+		@keyframes popupAnimation {
+			from {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
+
+			to {
+				opacity: 1;
+				width: 190px;
+				height: 122px;
+			}
+		}
+
+		body {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+
+		#map {
+			margin: 3rem auto;
+			max-width: 1030px;
+			height: 630px;
+			border-radius: 10px;
+			transition: all .5s ease;
+			position: relative;
+			overflow: auto;
+			direction: rtl;
+			transform: scale(1);
+		}
+
+		#map:hover {
+			/* box-shadow: 0 2px 6px #9e9e9e;
+			transform: scale(1.01); */
+		}
+
+		#alert {
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 16px;
+			background-color: #ddd;
+			color: #333;
+			padding: 5px;
+			font-weight: bold;
+			margin-top: 30px;
+		}
+
+		.mapContainer {
+			width: 930px;
+			height: 630px;
+			box-shadow: 0 3px 6px #d1d1d1;
+			overflow: hidden;
+			position: relative;
+			cursor: grab;
+		}
+
+		.mapContainer:active,
+		.mapContainer:focus {
+			cursor: grabbing;
+		}
+
+		#mapContainer {
+			width: 930px;
+			height: 630px;
+			position: absolute;
+			z-index: 1;
+		}
+
+		.popup {
+			background-color: #c7c7c7ed;
+			position: absolute;
+			padding: 15px;
+			border-radius: 15px;
+			animation-name: popupAnimation;
+			animation-duration: .4s;
+		}
+
+		.popup p {
+			margin: 1rem 0 0 0;
+			font-size: 17px;
+			font-family: 'Roboto', sans-serif;
+			animation-name: opacityAnimation;
+			animation-duration: .8s;
+		}
+
+		.popup p:first-child {
+			margin: 0;
+		}
 	</style>
-	
+	<script src="https://unpkg.com/tippy.js@6"></script>
 	<script src="../lib/raphael.js"></script>
-	<!-- <script src="scale.raphael.js"></script> -->
+	<!--<script src="scale.raphael.js"></script>-->
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
 	<script src="color.jquery.js"></script>
 	<script src="../jquery.usmap.js"></script>
-	
-	<script>
-	$(document).ready(function() {
-	  $('#map').usmap({
-	    'stateSpecificStyles': {
-	      'AK' : {fill: '#f00'}
-	    },
-	    'stateSpecificHoverStyles': {
-	      'HI' : {fill: '#ff0'}
-	    },
-	    
-	    'mouseoverState': {
-	      'HI' : function(event, data) {
-	        //return false;
-	      }
-	    },
-	    
-	    
-	    'click' : function(event, data) {
-	      $('#alert')
-	        .text('Click '+data.name+' on map 1')
-	        .stop()
-	        .css('backgroundColor', '#ff0')
-	        .animate({backgroundColor: '#ddd'}, 1000);
-	    }
-	  });
-	  
-	/* $('#map2').usmap({
-	    'stateStyles': {
-	      fill: '#025', 
-	      "stroke-width": 1,
-	      'stroke' : '#036'
-	    },
-	    'stateHoverStyles': {
-	      fill: 'teal'
-	    },
-	    
-	    'click' : function(event, data) {
-	      $('#alert')
-	        .text('Click '+data.name+' on map 2')
-	        .stop()
-	        .css('backgroundColor', '#af0')
-	        .animate({backgroundColor: '#ddd'}, 1000);
-	    }
-	  });
-	  
-	  $('#over-md').click(function(event){
-	    $('#map').usmap('trigger', 'MD', 'mouseover', event);
-	  });
-	  
-	  $('#out-md').click(function(event){
-	    $('#map').usmap('trigger', 'MD', 'mouseout', event);
-	  });*/
-	});
-	</script>
+	<!-- 	<script src="tooltip.js"></script>-->
+	<script src="https://unpkg.com/svg-pan-zoom-container"></script>
 </head>
+
 <body>
-  <div id="alert">Click alerts</div>
-  
-  <div id="map" style="width: 930px; height: 630px; border: solid 3px red;"></div>
-  
-  <button id="over-md">mouseover MD</button> <button id="out-md">mouseout MD</button>
-  
+
+	<div id="alert">Click alerts</div>
+	<div class="mapContainer">
+		<div id="mapContainer">
+			<div id="map">
+				<div id="mapheader"></div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// $.ui.ddmanager.prepareOffsets = function (t, event) { var i, j, m = $.ui.ddmanager.droppables[t.options.scope] || [], type = event ? event.type : null, list = (t.currentItem || t.element).find(":data(ui-droppable)").addBack(); droppablesLoop: for (i = 0; i < m.length; i++) { if (m[i].options.disabled || (t && !m[i].accept.call(m[i].element[0], (t.currentItem || t.element)))) { continue; } for (j = 0; j < list.length; j++) { if (list[j] === m[i].element[0]) { m[i].proportions().height = 0; continue droppablesLoop; } } m[i].visible = m[i].element.css("display") !== "none"; if (!m[i].visible) { continue; } if (type === "mousedown") { m[i]._activate.call(m[i], event); } m[i].offset = m[i].element.offset(); m[i].proportions({ width: m[i].element[0].offsetWidth * percent, height: m[i].element[0].offsetHeight * percent }); } };
+
+		let scale = 1;
+
+		$(document).ready(function () {
+			$('#map').usmap({
+				'stateSpecificStyles': {
+					'AK': {
+						fill: '#f00'
+					}
+				},
+				'stateSpecificHoverStyles': {
+					'HI': {
+						fill: '#ff0'
+					}
+				},
+
+				'mouseoverState': {
+					'HI': function (event, data) {
+						//return false;
+					}
+				},
+
+
+				'click': function (event, data) {
+					$('#alert')
+						.text('Click ' + data.name + ' on map 1')
+						.stop()
+						.css('backgroundColor', '#ff0')
+						.animate({
+							backgroundColor: '#ddd'
+						}, 1000);
+
+					var popup = document.createElement('div');
+					popup.classList.add('popup');
+					popup.id = 'popup';
+
+					var name = document.createElement('p');
+					name.innerHTML = 'Name: ' + data.data.name;
+					var capital = document.createElement('p');
+					capital.innerHTML = 'Capital: ' + data.data.capital;
+					var area = document.createElement('p');
+					area.innerHTML = 'Area: ' + data.data.area;
+
+					popup.appendChild(name);
+					popup.appendChild(capital);
+					popup.appendChild(area);
+
+					popup.style.top = event.originalEvent.offsetY;
+					popup.style.left = event.originalEvent.offsetX;
+
+					var mapContainer = document.getElementById('mapContainer')
+					if (mapContainer.children.length > 1) {
+						mapContainer.removeChild(mapContainer.children[1]);
+					}
+					mapContainer.appendChild(popup);
+				}
+
+
+			});
+
+
+		});
+
+		function zoomin() {
+			scale += 0.1;
+			document.getElementById('map').style.transform = `scale(${scale})`;
+		}
+
+		function zoomout() {
+			scale -= 0.1;
+			document.getElementById('map').style.transform = `scale(${scale})`;
+		}
+
+		$('#mapContainer').bind('mousewheel', function (event) {
+			if (event.originalEvent.wheelDelta >= 0) {
+				zoomin();
+			} else {
+				zoomout();
+			}
+		});
+
+
+		dragElement(document.getElementById("mapContainer"));
+
+		function dragElement(elmnt) {
+			var pos1 = 0,
+				pos2 = 0,
+				pos3 = 0,
+				pos4 = 0;
+			if (document.getElementById("map")) {
+				/* if present, the header is where you move the DIV from:*/
+				document.getElementById("map").onmousedown = dragMouseDown;
+			} else {
+				/* otherwise, move the DIV from anywhere inside the DIV:*/
+				elmnt.onmousedown = dragMouseDown;
+			}
+
+			function dragMouseDown(e) {
+				e = e || window.event;
+				e.preventDefault();
+				// get the mouse cursor position at startup:
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				document.onmouseup = closeDragElement;
+				// call a function whenever the cursor moves:
+				document.onmousemove = elementDrag;
+			}
+
+			function elementDrag(e) {
+				e = e || window.event;
+				e.preventDefault();
+				// calculate the new cursor position:
+				pos1 = pos3 - e.clientX;
+				pos2 = pos4 - e.clientY;
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				// set the element's new position:
+				elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+				elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+			}
+
+			function closeDragElement() {
+				/* stop moving when mouse button is released:*/
+				document.onmouseup = null;
+				document.onmousemove = null;
+			}
+		}
+	</script>
 </body>
+
 </html>
